@@ -1,7 +1,7 @@
 {
     "targets": [
         {
-            "target_name": "hcifunctions",
+            "target_name": "btim",
             "sources": [
                 "hci_updown.cpp",
                 "hci_list.cpp",

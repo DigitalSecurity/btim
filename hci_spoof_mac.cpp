@@ -91,8 +91,7 @@ typedef struct {
  * Return values:
  *     - EXIT_FAILURE: on failure.
  *     - EXIT_SUCCESS: on success.
-
-*/
+ */
 static int ericsson_write(int descriptor, uint8_t *flash_data)
 {
     struct hci_request request;
