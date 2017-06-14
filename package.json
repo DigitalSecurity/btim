@@ -1,0 +1,30 @@
+{
+  "name": "btim",
+  "version": "1.0.0",
+  "description": "Bindings to HCI functions to list bluetooth device interfaces, spoof a MAC address and bring an interface \"up\" or \"down\".",
+  "main": "index.js",
+  "dependencies": {
+    "nan": "^2.0.0"
+  },
+  "devDependencies": {
+    "nan": "^2.0.0"
+  },
+  "scripts": {
+    "test": "node index.js",
+    "install": "node-gyp rebuild"
+  },
+  "keywords": [
+    "bluetooth"
+  ],
+  "author": "Digital Security",
+  "license": "MIT",
+  "gypfile": true,
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/DigitalSecurity/btim.git"
+  },
+  "bugs": {
+    "url": "https://github.com/DigitalSecurity/btim/issues"
+  },
+  "homepage": "https://github.com/DigitalSecurity/btim#readme"
+}
