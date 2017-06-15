@@ -10,10 +10,10 @@ module.exports.spoof_mac = function spoof_mac(interface_number, mac_address) {
   return btim.spoof_mac(interface_number, mac_address);
 }
 
-module.exports.interface_up = function interface_up(interface_number) {
+module.exports.up = function interface_up(interface_number) {
   return btim.interface_up(interface_number);
 }
 
-module.exports.interface_down = function interface_down(interface_number) {
+module.exports.down = function interface_down(interface_number) {
   return btim.interface_down(interface_number);
 }
