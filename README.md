@@ -26,8 +26,8 @@ List bluetooth devices
 ----------------------
 
 ```
-var hci = require('btim')
-var interfaces = JSON.parse('[' + hci.list()  + ']');
+var btim = require('btim')
+var interfaces = JSON.parse('[' + btim.list()  + ']');
 console.log(interfaces);
 ```
 
@@ -35,17 +35,17 @@ Spoof a MAC address
 -------------------
 
 ```
-var hci = require('btim')
+var btim = require('btim')
 // Param 1: interface number; Param 2: new MAC address
-hci.spoof_mac(0, '11:22:33:44:55:66');
+btim.spoof_mac(0, '11:22:33:44:55:66');
 ```
 
 Bring an interface up or down
 ----------------------------
 
 ```
-var hci = require('btim')
+var btim = require('btim')
 // Param 1: interface number
-hci.interface_up(1);
-hci.interface_down(1);
+btim.up(1);
+btim.down(1);
 ```

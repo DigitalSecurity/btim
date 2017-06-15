@@ -1,6 +1,19 @@
-var hci = require('./build/Release/btim');
-var interfaces = JSON.parse('[' + hci.list() + ']');
-console.log(interfaces);
-//hci.spoof_mac(0, "C0:26:DF:00:67:3E");
-//hci.interface_down(1);
-//hci.interface_up(1);
+'use strict';
+
+var btim = require('./build/Release/btim');
+
+module.exports.list = function list() {
+  return btim.list();
+}
+
+module.exports.spoof_mac = function spoof_mac(interface_number, mac_address) {
+  return btim.spoof_mac(interface_number, mac_address);
+}
+
+module.exports.up = function interface_up(interface_number) {
+  return btim.interface_up(interface_number);
+}
+
+module.exports.down = function interface_down(interface_number) {
+  return btim.interface_down(interface_number);
+}
