@@ -46,6 +46,6 @@ Bring an interface up or down
 ```
 var btim = require('btim')
 // Param 1: interface number
-btim.interface_up(1);
-btim.interface_down(1);
+btim.up(1);
+btim.down(1);
 ```
