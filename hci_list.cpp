@@ -31,14 +31,12 @@ struct interface
  */
 static char *devices_header(struct hci_dev_info *device_info)
 {
-    static int header = -1;
+    int header = -1;
     char mac_address[18];
     char header_info[HEADER_DESCRIPTION_SIZE];
 
-    if (header == device_info->dev_id)
+    if (device_info->dev_id == header)
         return NULL;
-
-    header = device_info->dev_id;
 
     ba2str(&device_info->bdaddr, mac_address);
 
@@ -70,9 +68,9 @@ static void devices_info(struct hci_dev_info *device_info)
 
     header = devices_header(device_info);
 
-    if (!header)
+    if (header == NULL)
     {
-        printf("Error while filling with device header infos\n");
+        printf("Error while filling with device header infos!\n");
         return;
     }
 
@@ -81,8 +79,8 @@ static void devices_info(struct hci_dev_info *device_info)
     // Fill the buffer
     snprintf(buffer, INTERFACE_DESCRIPTION_SIZE,
         "%s, \"status\": \"%s\",\
-	\"RX\": {\"bytes\": %d, \"ACL\": %d, \"SCO\": %d, \"events\": %d, \"errors\": %d},\
-	\"TX\": {\"bytes\": %d, \"ACL\": %d, \"SCO\": %d, \"events\": %d, \"errors\": %d}}}",
+        \"RX\": {\"bytes\": %d, \"ACL\": %d, \"SCO\": %d, \"events\": %d, \"errors\": %d},\
+        \"TX\": {\"bytes\": %d, \"ACL\": %d, \"SCO\": %d, \"events\": %d, \"errors\": %d}}}",
         header, device_status,
         device_stats->byte_rx, device_stats->acl_rx,
         device_stats->sco_rx, device_stats->evt_rx,
@@ -94,7 +92,7 @@ static void devices_info(struct hci_dev_info *device_info)
     // Add to the list
     struct interface *bluetooth_interface
         = (struct interface *)malloc(sizeof(struct interface));
-    strncpy(bluetooth_interface->description, buffer, 1024);
+    strncpy(bluetooth_interface->description, buffer, INTERFACE_DESCRIPTION_SIZE);
     STAILQ_INSERT_TAIL(&interfaces, bluetooth_interface, next);
 
     free(header);
@@ -119,7 +117,7 @@ static void list_devices(void)
         return EXIT_FAILURE;
     }
 
-    if (!(devices_list = (hci_dev_list_req *)malloc(HCI_MAX_DEV * sizeof(struct hci_dev_req))))
+    if ((devices_list = (hci_dev_list_req *)malloc(HCI_MAX_DEV * sizeof(struct hci_dev_req))) == NULL)
     {
         perror("Can't allocate memory");
         return EXIT_FAILURE;

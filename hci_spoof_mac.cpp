@@ -337,14 +337,14 @@ int hci_spoof_mac(int device_id, char const *new_mac_address)
             {
                 if (vendor[i].reset_device(descriptor) < 0)
                 {
-		    // The device should be reset manually.
-		    status = ECANCELED;
+                    // The device should be reset manually.
+                    status = ECANCELED;
                 }
                 else
                 {
-		    // Reset the device
+                    // Reset the device
                     ioctl(descriptor, HCIDEVRESET, device_id);
-		    status = EXIT_SUCCESS;
+                    status = EXIT_SUCCESS;
                 }
             }
             else

@@ -3,7 +3,7 @@
 var btim = require('./build/Release/btim');
 
 module.exports.list = function list() {
-  return btim.list();
+  return JSON.parse('[' + btim.list() + ']');
 }
 
 module.exports.spoof_mac = function spoof_mac(interface_number, mac_address) {

@@ -26,8 +26,8 @@ List bluetooth devices
 ----------------------
 
 ```
-var btim = require('btim')
-var interfaces = JSON.parse('[' + btim.list()  + ']');
+var btim = require('btim');
+var interfaces = btim.list();
 console.log(interfaces);
 ```
 
