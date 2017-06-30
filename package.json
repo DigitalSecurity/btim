@@ -1,6 +1,6 @@
 {
   "name": "btim",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Bindings to HCI functions to list bluetooth device interfaces, spoof a MAC address and bring an interface \"up\" or \"down\".",
   "main": "index.js",
   "dependencies": {
