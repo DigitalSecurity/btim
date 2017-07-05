@@ -12,15 +12,12 @@
 
 #include <nan.h>
 
-#define INTERFACE_DESCRIPTION_SIZE 1024
-#define HEADER_DESCRIPTION_SIZE 512
-
 static struct hci_dev_info device_info;
 STAILQ_HEAD(, interface) interfaces;
 
 struct interface
 {
-    char description[INTERFACE_DESCRIPTION_SIZE];
+    v8::Local<v8::Object> description;
     STAILQ_ENTRY(interface) next;
 };
 
@@ -29,75 +26,95 @@ struct interface
  * Params:
  *     - devices_info: info about a HCI device.
  */
-static char *devices_header(struct hci_dev_info *device_info)
+static void interface_infos(v8::Isolate *isolate, struct hci_dev_info *device_info)
 {
-    static int header = -1;
     char mac_address[18];
-    char header_info[HEADER_DESCRIPTION_SIZE];
-
-    if (header == device_info->dev_id)
-        return NULL;
-
-    header = device_info->dev_id;
+    char buffer[101]; // Let be large
+    struct hci_dev_stats *device_stats = &device_info->stat;
+    char *device_status;
 
     ba2str(&device_info->bdaddr, mac_address);
 
-    // Fill the header
-    snprintf(header_info, HEADER_DESCRIPTION_SIZE,
-        "{\"%s\" : {\"Type\": \"%s\", \"Bus\": \"%s\", \"BD Address\": \"%s\", \"ACL MTU\": \"%d:%d\", \"SCO MTU\": \"%d:%d\"",
-        device_info->name,
-        hci_typetostr((device_info->type & 0x30) >> 4),
-        hci_bustostr(device_info->type & 0x0f),
-        mac_address,
-        device_info->acl_mtu,
-        device_info->acl_pkts,
-        device_info->sco_mtu,
-        device_info->sco_pkts);
-
-    return strdup(header_info);
-}
-
-/*
- * Get device infos
- * Params:
- *     - devices_info: info about a HCI device.
- */
-static void devices_info(struct hci_dev_info *device_info)
-{
-    struct hci_dev_stats *device_stats = &device_info->stat;
-    char *device_status, *header;
-    char buffer[INTERFACE_DESCRIPTION_SIZE];
-
-    header = devices_header(device_info);
-
-    if (!header)
-    {
-        printf("Error while filling with device header infos\n");
-        return;
-    }
-
     device_status = hci_dflagstostr(device_info->flags);
 
-    // Fill the buffer
-    snprintf(buffer, INTERFACE_DESCRIPTION_SIZE,
-        "%s, \"status\": \"%s\",\
-	\"RX\": {\"bytes\": %d, \"ACL\": %d, \"SCO\": %d, \"events\": %d, \"errors\": %d},\
-	\"TX\": {\"bytes\": %d, \"ACL\": %d, \"SCO\": %d, \"events\": %d, \"errors\": %d}}}",
-        header, device_status,
-        device_stats->byte_rx, device_stats->acl_rx,
-        device_stats->sco_rx, device_stats->evt_rx,
-        device_stats->err_rx,
-        device_stats->byte_tx, device_stats->acl_tx,
-        device_stats->sco_tx, device_stats->cmd_tx,
-        device_stats->err_tx);
+    /*
+     * Fill an object with all infos
+     */
+
+    // RX
+    v8::Local<v8::Object> obj_rx = v8::Object::New(isolate);
+
+    obj_rx->Set(v8::String::NewFromUtf8(isolate, "bytes"),
+                v8::Number::New(isolate, device_stats->byte_rx));
+
+    obj_rx->Set(v8::String::NewFromUtf8(isolate, "acl"),
+                v8::Number::New(isolate, device_stats->acl_rx));
+
+    obj_rx->Set(v8::String::NewFromUtf8(isolate, "sco"),
+                v8::Number::New(isolate, device_stats->sco_rx));
+
+    obj_rx->Set(v8::String::NewFromUtf8(isolate, "events"),
+                v8::Number::New(isolate, device_stats->evt_rx));
+
+    obj_rx->Set(v8::String::NewFromUtf8(isolate, "errors"),
+                v8::Number::New(isolate, device_stats->err_rx));
+
+    // TX
+    v8::Local<v8::Object> obj_tx = v8::Object::New(isolate);
+
+    obj_tx->Set(v8::String::NewFromUtf8(isolate, "bytes"),
+                v8::Number::New(isolate, device_stats->byte_tx));
+
+    obj_tx->Set(v8::String::NewFromUtf8(isolate, "acl"),
+                v8::Number::New(isolate, device_stats->acl_tx));
+
+    obj_tx->Set(v8::String::NewFromUtf8(isolate, "sco"),
+                v8::Number::New(isolate, device_stats->sco_tx));
+
+    obj_tx->Set(v8::String::NewFromUtf8(isolate, "events"),
+                v8::Number::New(isolate, device_stats->cmd_tx));
+
+    obj_tx->Set(v8::String::NewFromUtf8(isolate, "errors"),
+                v8::Number::New(isolate, device_stats->err_tx));
+
+    // Other info
+    v8::Local<v8::Object> obj_info = v8::Object::New(isolate);
+
+    obj_info->Set(v8::String::NewFromUtf8(isolate, "type"),
+                  v8::String::NewFromUtf8(isolate,
+                      hci_typetostr((device_info->type & 0x30) >> 4)));
+
+    obj_info->Set(v8::String::NewFromUtf8(isolate, "bus"),
+                  v8::String::NewFromUtf8(isolate,
+                      hci_bustostr(device_info->type & 0x0f)));
+
+    obj_info->Set(v8::String::NewFromUtf8(isolate, "address"),
+                  v8::String::NewFromUtf8(isolate, mac_address));
+
+    snprintf(buffer, 100, "%d:%d", device_info->acl_mtu, device_info->acl_pkts);
+    obj_info->Set(v8::String::NewFromUtf8(isolate, "acl_mtu"),
+                  v8::String::NewFromUtf8(isolate, buffer));
+
+    snprintf(buffer, 100, "%d:%d", device_info->sco_mtu, device_info->sco_pkts);
+    obj_info->Set(v8::String::NewFromUtf8(isolate, "sco_mtu"),
+                  v8::String::NewFromUtf8(isolate, buffer));
+
+    obj_info->Set(v8::String::NewFromUtf8(isolate, "status"),
+                  v8::String::NewFromUtf8(isolate, device_status));
+
+    // Construct the object
+    obj_info->Set(v8::String::NewFromUtf8(isolate, "rx"), obj_rx);
+    obj_info->Set(v8::String::NewFromUtf8(isolate, "tx"), obj_tx);
+
+    v8::Local<v8::Object> obj = v8::Object::New(isolate);
+    obj->Set(v8::String::NewFromUtf8(isolate, device_info->name), obj_info);
 
     // Add to the list
     struct interface *bluetooth_interface
         = (struct interface *)malloc(sizeof(struct interface));
-    strncpy(bluetooth_interface->description, buffer, 1024);
+    bluetooth_interface->description = obj;
     STAILQ_INSERT_TAIL(&interfaces, bluetooth_interface, next);
 
-    free(header);
     bt_free(device_status);
 }
 
@@ -107,7 +124,7 @@ static void devices_info(struct hci_dev_info *device_info)
  *     - EXIT_FAILURE: on failure.
  *     - EXIT_SUCCESS: on success.
  */
-static void list_devices(void)
+static void list_devices(v8::Isolate *isolate)
 {
     struct hci_dev_list_req *devices_list;
     struct hci_dev_req *dr;
@@ -119,7 +136,7 @@ static void list_devices(void)
         return EXIT_FAILURE;
     }
 
-    if (!(devices_list = (hci_dev_list_req *)malloc(HCI_MAX_DEV * sizeof(struct hci_dev_req))))
+    if ((devices_list = (hci_dev_list_req *)malloc(HCI_MAX_DEV * sizeof(struct hci_dev_req))) == NULL)
     {
         perror("Can't allocate memory");
         return EXIT_FAILURE;
@@ -149,7 +166,7 @@ static void list_devices(void)
             hci_close_dev(device);
         }
 
-        devices_info(&device_info);
+        interface_infos(isolate, &device_info);
     }
 
     free(devices_list);
@@ -173,12 +190,12 @@ void HCI_list(const Nan::FunctionCallbackInfo<v8::Value>& info)
     STAILQ_INIT(&interfaces);
 
     // Get bluetooth interfaces
-    list_devices();
+    list_devices(isolate);
 
     // Populate the array
     STAILQ_FOREACH(bluetooth_interface, &interfaces, next)
     {
-        array->Set(idx_item, v8::String::NewFromUtf8(isolate, bluetooth_interface->description));
+        array->Set(idx_item, bluetooth_interface->description);
         idx_item++;
     }
 
